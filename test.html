@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dictionary App</title>
+</head>
+<body>
+  <style>#game_screen{
+    font-size: 30px;
+    background-color: rgba(0, 0, 0, 0.8);
+color: whitesmoke;
+    position: absolute;
+    right:100px;
+    top: 100px;
+    width: 600px;
+    height: 500px;
+    overflow: scroll;
+    border-radius: 20px rgba(0, 0, 0, 0.5); ; 
+    padding: 20px; 
+    box-shadow: 0 0 20p;
+    
+}
+#input_area{
+    font-size: larger;
+    border-radius: 30px;
+    background-color: aquamarine;position: absolute;
+    right: 400px;
+    top: 650px;
+    width: 250px;
+    height: 60px;
+    padding: 10px;
+}
+#hint{
+    border-radius: 30px;
+    background-color: #e69e1a;
+    font-size: medium;
+    width: 100px;
+    height: 50px;position: absolute;
+    top:680px;
+    cursor: pointer;
+    padding: 10px;
+}
+#show_word{
+    border: solid 2px #ccc;
+    width: 300px;
+    height: 50px;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 30px;
+border-radius: 25px;    position: absolute;
+top: 5px;
+right:350px;
+background-color: #f9f9f9;
+
+}
+#display_meaning{
+    border: solid 5px #5ae1d2;
+    width: 600px;
+    height: 600px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 20px ;position: absolute;
+    background-color: rgba(255, 255, 255, 0.9);;
+    border-radius: 20px;
+    overflow: auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    font: bold;
+}
+#boss{
+    position: relative;
+}
+#button{
+    font-size: larger;
+    border-radius: 30px;
+    background-color: rgb(148, 255, 127);position: absolute;
+    right: 280px;
+    top: 650px;
+    width: 100px;
+    height: 50px;
+    cursor: pointer;
+    padding: 10px;
+}
+img{
+    position: absolute;
+    left: 610px;
+    top: 200px;
+    width: 200px;
+    display: none;
+}
+body{
+    background: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTc0Qwg3WLtMqpoiCSs7ca4_aqISQZk-nX-iM3skndIHA&s");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+
+}
+#search{
+    position: relative;
+    top: 610px;left: 120px;
+    width: 60px;height: 30px;
+    font-size: larger;
+    border-radius: 30px;
+    width: 250px;
+    height: 60px;
+    padding: 10px;
+}
+</style>
+  <div id="boss">
+  <h1>Welcome to my hangman game</h1>
+  <div id="display_meaning"  ></div>
+  <button onclick="take() " id="hint">Hint</button>
+  <input type="text"  id="search" placeholder="search any word! press enter" >
+  <center><p id="show_word">
+  </p>
+  </center>
+<img src="https://cdn-icons-png.flaticon.com/512/43/43980.png" alt="photo" id="photo">
+  <center><div id="game_screen"></div>
+  <input type="text" id="input_area" placeholder="Provide me guessed letter">
+  <button type="button" id="button" onclick="add()">Submit</button>
+  </center>
+  </div>
+  <script >var photo=document.getElementById("photo");
+    var search=document.getElementById("search");
+    var display=document.getElementById("display_meaning");
+    var count=10;
+    let show_word=document.getElementById("show_word");
+    let output=document.getElementById("game_screen");
+    
+    const mylist=["Absence","Ambiguity","Comprehensive","Diligent","Eloquent","Exacerbate","Formidable","Inevitable","Lucid","Magnitude","Prolific","Resilient","Substantial","Ubiquitous","Versatile","Zealous","Ephemeral","Gregarious","Indomitable","Meticulous","Adaptable","Beneficial","Coherent","Diverse","Endeavor","Facilitate","Genuine","Inherent","Legitimate","Noteworthy","Optimistic","Prerequisite","Rational","Simultaneous","Transparent","Utilize","Accommodate","Bolster","Conscientious","Diligent"];
+    var word=mylist[Math.floor(Math.random()*mylist.length)];
+    let length=word.length;
+    let array=Array(length).fill('_');
+    
+    function take(){
+        if(count>3&&newcount==0){
+            alert("Sorry! You can only use the hint when you have less than 3 attempts left");
+            return;
+        }
+        if(newcount==1){
+            var past=word;
+            word=new_word;
+        }
+        display.textContent='';
+        let url=`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
+        fetch(url)
+        .then(response=>response.json())
+        .then(data=>{
+            if(data&&data[0]&&data[0].meanings){
+                function extractDefinitions(data){
+                    var definitionsList=[];
+                    data.forEach(entry=>{
+                        if(entry.definitions){
+                            entry.definitions.forEach(definition=>{
+                                if(definition.definition){
+                                    definitionsList.push(definition.definition);
+                                }
+                            });
+                        }
+                    });
+                    return definitionsList;
+                }
+                function extractSynonymsAntonyms(data){
+                    var synonymsList=[];
+                    var antonymsList=[];
+                    data.forEach(entry=>{
+                        if(entry.synonyms){
+                            synonymsList=synonymsList.concat(entry.synonyms);
+                        }
+                        if(entry.antonyms){
+                            antonymsList=antonymsList.concat(entry.antonyms);
+                        }
+                    });
+                    return { synonyms: synonymsList, antonyms: antonymsList };
+                }
+                let { synonyms, antonyms }=extractSynonymsAntonyms(data[0].meanings);
+                let list=extractDefinitions(data[0].meanings);
+                for(let x=0;x<list.length;x++){
+                    display.innerHTML+="Definition:"+list[x]+"<br>";
+                }
+                for(let x=0;x<synonyms.length;x++){
+                    if(synonyms[x]!=null){
+                        display.innerHTML+="Synonyms:"+synonyms[x]+"<br>";
+                    }
+                }
+                for(let x=0;x<antonyms.length;x++){
+                    if(antonyms[x]!=null){
+                        display.innerHTML+="Antonyms:"+antonyms[x]+"<br>";
+                    }
+                }
+            } else {
+                console.error("Error: Invalid API response format");
+                display.textContent='Sorry! We could not find such meaning';
+            }
+        })
+        .catch(error=>console.log("Sorry! An error has occurred",error));
+        if(newcount==1){
+            word=past;
+            newcount=0;
+        }
+    }
+    
+    document.getElementById("input_area").addEventListener("keypress",function(event){
+        if(event.key==="Enter"){
+            add();
+        }
+    });
+    
+    function add(){
+        var order=0;
+        show_word.innerHTML='';
+        let letter=document.getElementById("input_area").value;
+        if(letter.trim().length!=1){
+            alert("Please provide a single letter");
+        }
+        document.getElementById("input_area").value='';
+        if(array.join('')===word){
+            output.textContent="Congratulations! You won the game";
+            show_word.innerHTML='';
+            return;
+        }
+        if(letter.trim().length==1){
+            for(let i=0;i<length;i++){
+                if(letter===word[i]){
+                    if(array[i]==letter){
+                        output.innerHTML+="Sorry! The letter has already been chosen"+"<br>";
+                        break;
+                    }
+                    order=1;
+                    output.innerHTML+="Congratulations! You got a letter"+"<br>";
+                    array[i]=word[i];
+                    for(let q=0;q<length;q++){
+                        if(array[q]!=letter){
+                            if(letter===word[q]){
+                                output.innerHTML+="Congratulations! You got a letter"+"<br>";
+                                array[q]=word[q];
+                            }
+                        }
+                        if(q==length-1){
+                            for(let m=0;m<length;m++){
+                                show_word.innerHTML+=array[m];
+                            }
+                        }
+                    }
+                    if(array.join('')===word){
+                        output.innerHTML="Congratulations! You won the game in "+count+" attempts"+"<br>";
+                        alert("Congratulations you won! Now it's time for a new round");
+                        replay();
+                    }
+                    return;
+                } else {
+                    if(order!=1){
+                        if(i===length-1){
+                            output.innerHTML+="Sorry! You chose the wrong letter"+"<br>"+"Attempts left:"+count+"<br>";
+                            count=count-1;
+                            if(i===length-1){
+                                for(let m=0;m<length;m++){
+                                    show_word.innerHTML+=array[m];
+                                }
+                            }
+                        }
+                        if(count==0){
+                            photo.style.display="block";
+                        }
+                        setTimeout(function(){
+                            if(count==0){
+                                photo.style.display="block";
+                                output.innerHTML+="Sorry! You lost the round"+"<br>";
+                                show_word.textContent='';
+                                alert("The word was "+word);
+                                alert("Sorry! You lost: Now it's time for a new round");
+                                setTimeout(replay(),1000);
+                            }
+                        },3000);
+                    }
+                }
+            }
+        }
+    }
+    
+    function replay(){
+        word=mylist[Math.floor(Math.random()*mylist.length)];
+        length=word.length;
+        array=Array(length).fill('_');
+        count=10;
+        output.textContent='';
+        display.textContent='';
+        photo.style.display="none";
+    }
+    
+    search.addEventListener("keypress",function(events){
+        if(events.key==="Enter"){
+            searchFunction();
+        }
+    });
+    
+    var newcount=0;
+    
+    function searchFunction(){
+        newcount=1;
+        new_word=search.value;
+        search.value='';
+        take();
+    }
+    </script>
+</body>
+</html>
